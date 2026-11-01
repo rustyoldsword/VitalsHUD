@@ -41,6 +41,10 @@ xmake f -m releasedbg --skyrim_vr=n
 xmake build VitalsHUD
 ```
 
+Before building, apply `commonlib-unk8c.patch` inside `lib/CommonLibSSE-NG` (`git apply ../../commonlib-unk8c.patch`).
+Older revisions of the `ng` branch declare an extra `TESObjectREFR` virtual that Skyrim SE/AE do not have, so in an
+SE/AE-only build every later virtual (`IsDead`, `IsInCombat`, ...) is called one slot too far.
+
 `data/` holds the default `VitalsHUD.ini` and `Diseases.json` that ship next to the DLL. `tools/slice_sheets.py`
 cuts the stage-picture sprite sheets into the icons the DLL loads (`Interface/VitalsHUD/<icon>.png`);
 `tools/icons.py` is the older generator of vector stage icons.

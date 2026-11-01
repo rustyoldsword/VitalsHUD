@@ -199,7 +199,7 @@ namespace Vitals::Feed
 				maxAlpha = std::max(maxAlpha, entry.second);
 			}
 			const float opacity = std::clamp(s.fOpacity, 0.1f, 1.0f);
-			auto*       list = ImGuiMCP::GetForegroundDrawList();
+			auto*       list = ImGuiMCP::GetBackgroundDrawList();  // under every ImGui window, so the SMF menu covers it
 			const float bg = std::clamp(s.fMsgBackground, 0.0f, 0.85f);  // the preview shows it as set; its frame marks the drag area
 			if (bg > 0.005f) {
 				DL::AddRectFilled(list, { x, y }, { x + width, y + height }, Col(8, 10, 16, bg * opacity * maxAlpha), 8.0f * k, ImGuiMCP::ImDrawFlags_RoundCornersAll);

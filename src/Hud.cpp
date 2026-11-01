@@ -821,7 +821,7 @@ namespace Vitals::Hud
 				dragging = false;
 			}
 
-			auto* list = ImGuiMCP::GetForegroundDrawList();
+			auto* list = ImGuiMCP::GetBackgroundDrawList();  // under every ImGui window, so the SMF menu covers it
 			const float bgAlpha = std::clamp(s.fBackground, 0.0f, 1.0f) * alpha * std::max({ maxShown, statusShown, diseaseShown });
 			// the preview shows the background exactly as set (0 = none); only its frame marks where to drag
 			if (bgAlpha > 0.005f) {
