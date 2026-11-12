@@ -1,7 +1,7 @@
 #pragma once
 
-// SL Survival status block: licences, toll, curfew, curses, orgasm fatigue, read through SexLab Survival Framework's
-// SLSFW_GetHudStatus export (SLSFW 0.6.0+).
+// Status block: SL Survival licences, toll, curfew, curses, orgasm fatigue (read through SexLab Survival Framework's
+// SLSFW_GetHudStatus export, SLSFW 0.6.0+), plus Amputator Framework Reborn's heavy bleeding on the player.
 namespace Vitals::Sls
 {
 	enum class Tone : std::uint8_t

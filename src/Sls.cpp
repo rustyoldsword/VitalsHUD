@@ -16,6 +16,11 @@ namespace Vitals::Sls
 		constexpr const char* kSkull = "\xef\x95\x8c";     // f54c skull
 		constexpr const char* kWizard = "\xef\x9b\xa8";    // f6e8 hat-wizard
 		constexpr const char* kBattery = "\xef\x89\x83";   // f243 battery-quarter
+		constexpr const char* kDroplet = "\xef\x81\x83";   // f043 droplet
+
+		// Amputator Framework Reborn's heavy bleeding on the player (_AMP_HeavyBleeding, Amputator.esm 0x00EAAA):
+		// magnitude = health lost per second, duration = how long it runs
+		RE::EffectSetting* g_bleeding{ nullptr };
 
 		constexpr std::array<const char*, SLSFW_LicCount> kLicence{ "Magic", "Weapon", "Armor", "Bikini", "Clothes", "Curfew", "Whore", "Freedom", "Property" };
 		constexpr std::array<const char*, SLSFW_LicCount> kShort{ "Mag", "Wpn", "Arm", "Bik", "Clo", "Cur", "Wh", "Fre", "Prop" };
@@ -89,7 +94,10 @@ namespace Vitals::Sls
 				a_out.push_back({ kLock, "Confined to town", "you may not leave", "Grounded", Tone::kBad, "sls_grounded" });
 			}
 
-			if (a_s.town >= 0 || a_s.curfewInEffect || a_always) {
+			// SLS runs its curfew only with the curfew licence in use (licence system on, curfew licence on; the gender
+			// gate switches both off for a male player): otherwise there is no curfew to show, in town or anywhere
+			const bool curfewUsed = a_s.licence[SLSFW_LicCurfew] >= 0;
+			if (curfewUsed && (a_s.town >= 0 || a_s.curfewInEffect || a_always)) {
 				Item item{ kMoon, "Curfew" };
 				const auto span = std::format("{}-{}", Hour(a_s.curfewBegin), Hour(a_s.curfewEnd));
 				if (a_s.curfewViolation) {
@@ -132,12 +140,42 @@ namespace Vitals::Sls
 		}
 	}
 
+	namespace
+	{
+		// a status line while the player bleeds; the stage picture follows the strength (Amputator default 0.5 / 0.75 / 1)
+		void AppendBleeding(std::vector<Item>& a_out)
+		{
+			auto* player = RE::PlayerCharacter::GetSingleton();
+			auto* target = g_bleeding && player ? player->AsMagicTarget() : nullptr;
+			auto* list = target ? target->GetActiveEffectList() : nullptr;
+			if (!list) {
+				return;
+			}
+			for (auto* active : *list) {
+				if (!active || active->GetBaseObject() != g_bleeding || active->flags.any(RE::ActiveEffect::Flag::kInactive)) {
+					continue;
+				}
+				const float perSecond = std::abs(active->magnitude);  // a damage effect: the magnitude is negative (-0.5)
+				const int   left = std::max(0, static_cast<int>(std::lround(active->duration - active->elapsedSeconds)));
+				Item        item{ kDroplet, "Bleeding" };
+				item.value = std::format("{:.2g} health/s, {} s left", perSecond, left);
+				item.tag = std::format("Bleed {}s", left);
+				item.tone = Tone::kBad;
+				item.icon = perSecond >= 0.9f ? "bleed_3" : (perSecond >= 0.65f ? "bleed_2" : "bleed_1");
+				a_out.push_back(std::move(item));
+				return;
+			}
+		}
+	}
+
 	void Init()
 	{
 		if (const auto module = ::GetModuleHandleW(L"SLSurvivalFramework.dll")) {
 			g_get = reinterpret_cast<SLSFW_GetHudStatusFn>(::GetProcAddress(module, "SLSFW_GetHudStatus"));
 		}
+		g_bleeding = RE::TESDataHandler::GetSingleton()->LookupForm<RE::EffectSetting>(0x00EAAA, "Amputator.esm"sv);
 		logger::info("SL Survival: {}", Describe());
+		logger::info("Amputator bleeding: {}", g_bleeding ? "Amputator.esm _AMP_HeavyBleeding" : "not found (Amputator Framework Reborn 1.15+)");
 	}
 
 	void Sample()
@@ -154,6 +192,7 @@ namespace Vitals::Sls
 		if (g_get && mode != 2 && g_get(&status)) {
 			Build(status, mode == 1, items);
 		}
+		AppendBleeding(items);  // not an SLS line, but the same block: shown whatever the SLS setting
 		std::scoped_lock lock(g_lock);
 		g_items = std::move(items);
 	}

@@ -2,7 +2,7 @@
 
 Source code of Vitals HUD, a Skyrim SE/AE SKSE plugin that draws one compact HUD panel for the hidden numbers of the
 player character - wetness, arousal, dirt, warmth, hunger, fatigue, cycle and cum craving - plus SL Survival's status,
-its message panel and the diseases the player carries. Drawn with SKSE Menu Framework: no SkyUI widgets, no Papyrus
+its message panel, the diseases the player carries and, with Amputator Framework Reborn, bleeding. Drawn with SKSE Menu Framework: no SkyUI widgets, no Papyrus
 polling loop, no plugin file.
 
 The released mod (DLL, stage pictures, disease icons, fonts, installer) is distributed separately; this repository

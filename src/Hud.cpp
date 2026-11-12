@@ -380,6 +380,7 @@ namespace Vitals::Hud
 				{ "\xef\x94\x9e", "Toll, Whiterun", "not paid (100 gold)", "Toll 100", Sls::Tone::kBad, "toll_unpaid" },
 				{ "\xef\x86\x86", "Curfew", "in effect until 06:00", "Curfew", Sls::Tone::kWarn, "curfew_on" },
 				{ "\xef\x89\x83", "Orgasm fatigue", "tired (4.0 of 3.0 today)", "Fatigue 1", Sls::Tone::kWarn, "ofat_1" },
+				{ "\xef\x81\x83", "Bleeding", "0.75 health/s, 42 s left", "Bleed 42s", Sls::Tone::kBad, "bleed_2" },
 			};
 		}
 
