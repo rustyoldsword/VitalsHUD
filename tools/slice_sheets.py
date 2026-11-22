@@ -37,6 +37,7 @@ LAYOUT = {
     "sheet_sls_lic_b": ["lic_whore", "lic_freedom", "lic_property"],
     "sheet_sls_c": ["curfew_hours", "curfew_on", "curfew_breaking", "curse_bikini", "curse_magic"],
     "sheet_sls_d": ["ofat_1", "ofat_2", "ofat_3"],
+    "sheet_amp_a": ["bleed_1", "bleed_2", "bleed_3"],  # Amputator heavy bleeding (1.3.5)
 }
 
 

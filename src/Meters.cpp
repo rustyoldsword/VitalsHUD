@@ -27,7 +27,7 @@ namespace Vitals
 		}
 
 		constexpr std::array<MeterInfo, kMeterCount> kInfo{ {
-			{ "Wetness", "Wetness", "WetFunction NG", kIconDroplet, Rgb(80, 176, 255), Better::kNeither },
+			{ "Wetness", "Wetness", "Drench / WetFunction NG", kIconDroplet, Rgb(80, 176, 255), Better::kNeither },
 			{ "Arousal", "Arousal", "OSL Aroused / SexLab Aroused", kIconHeart, Rgb(255, 92, 150), Better::kNeither },
 			{ "Dirt", "Dirt", "Bathing in Skyrim", kIconBath, Rgb(176, 132, 84), Better::kDown },
 			{ "Warmth", "Warmth", "Survival Mode", kIconThermometer, Rgb(255, 150, 70), Better::kUp },
@@ -69,6 +69,7 @@ namespace Vitals
 		struct Sources
 		{
 			WfngGetGaugeFn  wfng{ nullptr };
+			const char*     wetnessSource{ "" };
 			SlaGetArousalFn slaNG{ nullptr };
 			OslGetArousalFn osl{ nullptr };
 			RE::TESFaction* slaFaction{ nullptr };
@@ -194,7 +195,7 @@ namespace Vitals
 			a_out.severity = 0.0f;
 			a_out.nominal = gauge.wetness <= gauge.dry;
 			Marks(a_out, bounds, cap);
-			// WetFunction NG knows its own rate: use it instead of fitting the sampled value
+			// Drench (and WetFunction NG) know their own rate: use it instead of fitting the sampled value
 			ApplyTrend(MeterId::kWetness, a_out, a_hours, a_out.fill <= 0.001f && gauge.rate < 0.0f ? 0.0f : gauge.rate / cap);
 		}
 
@@ -525,10 +526,18 @@ namespace Vitals
 	{
 		void Init()
 		{
-			if (const auto module = ::GetModuleHandleW(L"WetFunctionNG.dll")) {
-				g_src.wfng = reinterpret_cast<WfngGetGaugeFn>(::GetProcAddress(module, "WFNG_GetPlayerGauge"));
-				if (!g_src.wfng) {
-					logger::warn("WetFunctionNG.dll has no WFNG_GetPlayerGauge export: update WetFunction NG to 1.3.1 or newer for the wetness meter");
+			// Drench is WetFunction NG's successor: same gauge layout, its own module and export name
+			if (const auto module = ::GetModuleHandleW(L"Drench.dll")) {
+				g_src.wfng = reinterpret_cast<WfngGetGaugeFn>(::GetProcAddress(module, "Drench_GetPlayerGauge"));
+				g_src.wetnessSource = g_src.wfng ? "Drench.dll Drench_GetPlayerGauge" : "";
+			}
+			if (!g_src.wfng) {
+				if (const auto module = ::GetModuleHandleW(L"WetFunctionNG.dll")) {
+					g_src.wfng = reinterpret_cast<WfngGetGaugeFn>(::GetProcAddress(module, "WFNG_GetPlayerGauge"));
+					g_src.wetnessSource = g_src.wfng ? "WetFunctionNG.dll WFNG_GetPlayerGauge" : "";
+					if (!g_src.wfng) {
+						logger::warn("WetFunctionNG.dll has no WFNG_GetPlayerGauge export: update WetFunction NG to 1.3.1 or newer for the wetness meter");
+					}
 				}
 			}
 			if (const auto module = ::GetModuleHandleW(L"SexlabArousedNG.dll")) {
@@ -629,7 +638,7 @@ namespace Vitals
 		{
 			switch (a_id) {
 			case MeterId::kWetness:
-				return g_src.wfng ? "WetFunctionNG.dll WFNG_GetPlayerGauge" : "not found (WetFunction NG 1.3.1+)";
+				return g_src.wfng ? g_src.wetnessSource : "not found (Drench, or WetFunction NG 1.3.1+)";
 			case MeterId::kArousal:
 				return g_src.slaNG ? "SexlabArousedNG.dll SLA_GetArousalInt" : (g_src.osl ? "OSLAroused.dll GetArousalExt" : (g_src.slaFaction ? "sla_Arousal faction rank" : "not found"));
 			case MeterId::kDirt:
